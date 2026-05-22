@@ -1,0 +1,39 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: windows
+runbook: disable-account
+phase: contain
+
+action: |
+  Disable the Active Directory account '${sam_account_name}' in domain
+  '${domain}' and revoke its outstanding Kerberos ticket cache. Disabling
+  alone does NOT invalidate already-issued Kerberos TGTs — you MUST pair
+  the disable with a TGT revocation (krbtgt password reset is the
+  nuclear option; per-user resetKrbtgt is the surgical one).
+
+command: |
+  # 1) Disable the account
+  Disable-ADAccount -Identity ${sam_account_name}
+
+  # 2) Force a password change so existing tickets cannot be renewed
+  Set-ADAccountPassword -Identity ${sam_account_name} -Reset \
+    -NewPassword (ConvertTo-SecureString -AsPlainText \
+      ("R0t8t3-" + [Guid]::NewGuid().ToString("N")) -Force)
+  Set-ADUser -Identity ${sam_account_name} -ChangePasswordAtLogon $true
+
+  # 3) Per-user TGT invalidation (Win2016+):
+  Set-ADUser -Identity ${sam_account_name} -Replace @{ "msDS-KeyVersionNumber" = 0 }
+
+  # 4) (Optional, nuclear) full krbtgt rotation — only if compromise is
+  #    forest-wide. DO NOT default to this:
+  #    https://github.com/microsoft/New-KrbtgtKeys.ps1
+
+blast_radius: |
+  Account '${sam_account_name}' cannot authenticate via Kerberos or NTLM
+  after the password reset propagates (~AD replication interval, typically
+  15 min). If this is a service account, expect downstream service outage
+  — pre-warn the owning team. If this is a Domain Admin account, this
+  action MUST go through tier-0 change control.
+
+rollback: |
+  Enable-ADAccount -Identity ${sam_account_name}
+  # then have the owner reset their password through normal channels.

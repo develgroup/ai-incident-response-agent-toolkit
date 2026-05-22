@@ -1,0 +1,32 @@
+[
+  {
+    "Computer": "fin-app-03.acme.local",
+    "Name": "PSEXESVC.exe",
+    "PID": 4812,
+    "PPID": 612,
+    "ParentName": "services.exe",
+    "Path": "C:\\Windows\\PSEXESVC.exe",
+    "User": "NT AUTHORITY\\SYSTEM",
+    "StartTime": "2026-05-19T10:04:30Z"
+  },
+  {
+    "Computer": "fin-app-03.acme.local",
+    "Name": "update.exe",
+    "PID": 7728,
+    "PPID": 5612,
+    "ParentName": "powershell.exe",
+    "Path": "C:\\Windows\\Temp\\update.exe",
+    "User": "ACME\\admin-alice",
+    "StartTime": "2026-05-19T10:05:50Z"
+  },
+  {
+    "Computer": "fin-app-03.acme.local",
+    "Name": "explorer.exe",
+    "PID": 3204,
+    "PPID": 2880,
+    "ParentName": "userinit.exe",
+    "Path": "C:\\Windows\\explorer.exe",
+    "User": "ACME\\bob",
+    "StartTime": "2026-05-19T08:12:11Z"
+  }
+]

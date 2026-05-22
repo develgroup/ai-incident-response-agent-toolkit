@@ -1,0 +1,37 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: windows
+runbook: kill-process
+phase: contain
+
+action: |
+  Terminate a specific malicious process tree on '${computer}'. Use only
+  when the process is known-malicious (verified via Sysmon parent chain +
+  enrichment of the binary hash). Killing a benign parent of a malicious
+  child often loses critical forensics — prefer isolate-host then triage.
+
+command: |
+  # PowerShell (Stop-Process by PID — fastest)
+  Stop-Process -Id ${pid} -Force
+
+  # Or by Sysmon ProcessGuid (more precise):
+  $proc = Get-CimInstance Win32_Process | Where-Object {
+    $_.ProcessId -eq ${pid}
+  }
+  $proc | Invoke-CimMethod -MethodName Terminate
+
+  # EDR equivalents:
+  #   Cortex XDR  → /endpoints/terminate-process
+  #   Defender    → /machines/{id}/runliveresponse with kill-process command
+  #   CrowdStrike → RTR `kill ${pid}`
+
+blast_radius: |
+  Only the named process tree dies. If the process is part of a larger
+  attack chain (e.g. PsExec service host), expect re-spawn unless paired
+  with stop-disable-service and remove-scheduled-task. ProcessGuid
+  '${process_guid}' is the canonical identity — PID alone can race with
+  a re-spawn at the same number.
+
+rollback: |
+  None — terminated processes do not come back. If this was a misfire,
+  the attacker's persistence will re-create the process unless their
+  persistence channel is also closed.

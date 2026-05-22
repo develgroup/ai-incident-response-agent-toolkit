@@ -1,0 +1,36 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: windows
+runbook: isolate-host
+phase: contain
+
+action: |
+  Network-isolate the host via the EDR (Cortex XDR / Defender for Endpoint /
+  CrowdStrike Falcon). The host stays powered on so memory and disk are
+  preserved for forensics — only network traffic is severed (with the
+  exception of the EDR control channel itself).
+
+command: |
+  # Cortex XDR (Palo Alto) — REST API
+  POST https://api-<tenant>.xdr.us.paloaltonetworks.com/public_api/v1/endpoints/isolate
+  Body: { "request_data": { "endpoint_id": "<edr_endpoint_id_for_${computer}>" } }
+
+  # Defender for Endpoint — Microsoft Graph Security
+  POST https://api.securitycenter.microsoft.com/api/machines/<id>/isolate
+  Body: { "Comment": "${rationale}", "IsolationType": "Full" }
+
+  # CrowdStrike Falcon — host-actions API
+  POST https://api.crowdstrike.com/devices/entities/devices-actions/v2?action_name=contain
+  Body: { "ids": [ "<aid_for_${computer}>" ] }
+
+blast_radius: |
+  Host '${computer}' becomes unreachable from the network (except the EDR
+  control channel). All TCP/UDP/ICMP traffic is blocked at the host
+  firewall. User-facing services on this host go down immediately. Confirm
+  the load balancer / cluster has removed it before pushing.
+
+rollback: |
+  Issue the matching un-isolate / lift-containment API call on the EDR
+  portal once the investigation completes:
+    Cortex XDR  -> /endpoints/unisolate
+    Defender    -> /machines/<id>/unisolate
+    CrowdStrike -> action_name=lift_containment

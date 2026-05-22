@@ -1,0 +1,32 @@
+[
+  {
+    "id": "signin-1",
+    "createdDateTime": "2026-05-19T12:09:55Z",
+    "userPrincipalName": "alice@acme.example",
+    "appId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+    "appDisplayName": "Acme Reporting Connector",
+    "ipAddress": "198.51.100.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; rv:124.0) Gecko/20100101 Firefox/124.0",
+    "correlationId": "ccccccc1-2222-3333-4444-555555555555",
+    "signInEventTypes": ["interactiveUser"],
+    "status": { "errorCode": 0 },
+    "mfaDetail": {
+      "authMethod": "PreviousSession",
+      "authDetail": "MFA requirement satisfied by claim in the token"
+    },
+    "location": { "countryOrRegion": "US", "city": "Unknown" }
+  },
+  {
+    "id": "signin-2",
+    "createdDateTime": "2026-05-19T12:15:42Z",
+    "userPrincipalName": null,
+    "servicePrincipalId": "spn-acme-reporting-connector",
+    "appId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+    "appDisplayName": "Acme Reporting Connector",
+    "ipAddress": "203.0.113.55",
+    "userAgent": "azsdk-python-graphrbac/0.61.1 Python/3.11.0",
+    "correlationId": "ddddddd2-2222-3333-4444-555555555555",
+    "signInEventTypes": ["servicePrincipal"],
+    "status": { "errorCode": 0 }
+  }
+]

@@ -1,0 +1,73 @@
+# cloud-event → MITRE ATT&CK technique map.
+# The attack-graph builder uses this to auto-tag confirmed nodes.
+# Format:
+#   <provider>:<event_name>: { id, name, phase }
+# phase ∈ initial-access | credential-use | execution | persistence |
+#         privilege-esc | defense-evasion | discovery | lateral-movement |
+#         collection | exfiltration | impact
+
+aws:
+  ConsoleLogin:                  { id: T1078.004, name: "Valid Accounts: Cloud Accounts", phase: initial-access }
+  AssumeRole:                    { id: T1078.004, name: "Valid Accounts: Cloud Accounts", phase: credential-use }
+  AssumeRoleWithWebIdentity:     { id: T1199,     name: "Trusted Relationship",            phase: initial-access }
+  CreateAccessKey:               { id: T1098.001, name: "Account Manipulation: Additional Cloud Credentials", phase: persistence }
+  CreateLoginProfile:            { id: T1098.001, name: "Account Manipulation: Additional Cloud Credentials", phase: persistence }
+  UpdateAssumeRolePolicy:        { id: T1556.007, name: "Modify Authentication Process: Hybrid Identity",      phase: persistence }
+  AttachUserPolicy:              { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  PutUserPolicy:                 { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  AttachRolePolicy:              { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  PutRolePolicy:                 { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  StopLogging:                   { id: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs",       phase: defense-evasion }
+  DeleteTrail:                   { id: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs",       phase: defense-evasion }
+  DeleteFlowLogs:                { id: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs",       phase: defense-evasion }
+  ListBuckets:                   { id: T1580,     name: "Cloud Infrastructure Discovery",                       phase: discovery }
+  GetCallerIdentity:             { id: T1087.004, name: "Account Discovery: Cloud Account",                     phase: discovery }
+  DescribeInstances:             { id: T1580,     name: "Cloud Infrastructure Discovery",                       phase: discovery }
+  GetObject:                     { id: T1530,     name: "Data from Cloud Storage",                              phase: collection }
+  CreateDBSnapshot:              { id: T1530,     name: "Data from Cloud Storage",                              phase: collection }
+  ModifySnapshotAttribute:       { id: T1537,     name: "Transfer Data to Cloud Account",                       phase: exfiltration }
+  ModifyImageAttribute:          { id: T1537,     name: "Transfer Data to Cloud Account",                       phase: exfiltration }
+  PutBucketPolicy:               { id: T1537,     name: "Transfer Data to Cloud Account",                       phase: exfiltration }
+  ShareDBSnapshot:               { id: T1537,     name: "Transfer Data to Cloud Account",                       phase: exfiltration }
+  RunInstances:                  { id: T1496,     name: "Resource Hijacking",                                    phase: impact }
+  ScheduleKeyDeletion:           { id: T1485,     name: "Data Destruction",                                      phase: impact }
+
+windows:
+  # Security event IDs
+  "4624":   { id: T1078,     name: "Valid Accounts",                            phase: credential-use }
+  "4625":   { id: T1110,     name: "Brute Force",                               phase: initial-access }
+  "4672":   { id: T1078,     name: "Valid Accounts (special privileges)",       phase: privilege-esc }
+  "4698":   { id: T1053.005, name: "Scheduled Task/Job: Scheduled Task",        phase: persistence }
+  "4697":   { id: T1543.003, name: "Create or Modify System Process: Windows Service", phase: persistence }
+  "7045":   { id: T1543.003, name: "Create or Modify System Process: Windows Service", phase: persistence }
+  "1102":   { id: T1070.001, name: "Indicator Removal: Clear Windows Event Logs", phase: defense-evasion }
+  "4720":   { id: T1136.001, name: "Create Account: Local Account",             phase: persistence }
+  "4732":   { id: T1098,     name: "Account Manipulation",                      phase: privilege-esc }
+  "5140":   { id: T1021.002, name: "Remote Services: SMB/Windows Admin Shares", phase: lateral-movement }
+  # Sysmon event IDs (string-keyed so YAML doesn't coerce numerics)
+  "sysmon-1":  { id: T1059,     name: "Command and Scripting Interpreter (process create)", phase: execution }
+  "sysmon-3":  { id: T1071,     name: "Application Layer Protocol (network connect)",       phase: command-and-control }
+  "sysmon-10": { id: T1003.001, name: "OS Credential Dumping: LSASS Memory",                phase: credential-access }
+  "sysmon-11": { id: T1074.001, name: "Local Data Staging",                                  phase: collection }
+  "sysmon-13": { id: T1562.001, name: "Impair Defenses: Disable or Modify Tools",            phase: defense-evasion }
+
+azure:
+  "Sign-in activity":                                          { id: T1078.004, name: "Valid Accounts: Cloud Accounts",                  phase: initial-access }
+  "Add service principal":                                     { id: T1098.001, name: "Account Manipulation: Additional Cloud Credentials", phase: persistence }
+  "Update application":                                        { id: T1098.001, name: "Account Manipulation: Additional Cloud Credentials", phase: persistence }
+  "Update application - Certificates and secrets management":  { id: T1098.001, name: "Account Manipulation: Additional Cloud Credentials", phase: persistence }
+  "Add app role assignment grant to user":                     { id: T1528,     name: "Steal Application Access Token",                     phase: initial-access }
+  "Add app role assignment to service principal":              { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  "Add federated identity credential":                         { id: T1556.007, name: "Modify Authentication Process: Hybrid Identity",     phase: persistence }
+  "Add member to role":                                        { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  "Update conditional access policy":                          { id: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs",      phase: defense-evasion }
+  "Disable conditional access policy":                         { id: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs",      phase: defense-evasion }
+  "Set federation settings on domain":                         { id: T1556.007, name: "Modify Authentication Process: Hybrid Identity",     phase: persistence }
+  "Microsoft.Authorization/roleAssignments/write":             { id: T1098.003, name: "Account Manipulation: Additional Cloud Roles",        phase: privilege-esc }
+  "Microsoft.Insights/diagnosticSettings/delete":              { id: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs",      phase: defense-evasion }
+  "Microsoft.Compute/virtualMachines/runCommand/action":       { id: T1059.009, name: "Command and Scripting Interpreter: Cloud API",       phase: execution }
+  "New-InboxRule":                                             { id: T1564.008, name: "Hide Artifacts: Email Hiding Rules",                  phase: defense-evasion }
+  "Set-Mailbox":                                               { id: T1114.003, name: "Email Collection: Email Forwarding Rule",            phase: collection }
+  "MailItemsAccessed":                                         { id: T1114.002, name: "Email Collection: Remote Email Collection",          phase: collection }
+  "FileDownloaded":                                            { id: T1530,     name: "Data from Cloud Storage",                            phase: collection }
+  "AnonymousLinkCreated":                                      { id: T1537,     name: "Transfer Data to Cloud Account",                     phase: exfiltration }

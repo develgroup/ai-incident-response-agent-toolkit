@@ -1,0 +1,48 @@
+# Windows Host Fleet Profile — example.
+# Copy to `config/tenant.windows.yaml` for your environment.
+#
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+
+fleet:
+  domain: acme.local
+  ad_forest: acme.local
+  primary_tier:
+    - dc01.acme.local
+    - dc02.acme.local
+  jump_hosts:
+    - jump-host-01.acme.local
+    - jump-host-02.acme.local
+  edr_vendor: cortex_xdr   # cortex_xdr | defender_xdr | crowdstrike
+
+log_collection:
+  winlogbeat_to_siem: true
+  sysmon_enabled: true
+  sysmon_config_ref: swift-on-security/sysmon-modular
+  powershell_logging:
+    module: true
+    script_block: true
+    transcription: false
+  advanced_audit_policy:
+    process_creation: true
+    process_creation_command_line: true
+    filtering_platform_connection: true
+    object_access_handle_manipulation: true
+
+isolation:
+  edr_isolate_supported: true
+  network_quarantine_vlan: vlan-quarantine-99
+
+high_value_assets:
+  domain_controllers:
+    - dc01.acme.local
+    - dc02.acme.local
+  tier0_servers:
+    - ca01.acme.local
+    - pki01.acme.local
+  tier1_servers:
+    - sql01.acme.local
+    - exch01.acme.local
+
+break_glass_accounts:
+  - bg-1@acme.local
+  - bg-2@acme.local

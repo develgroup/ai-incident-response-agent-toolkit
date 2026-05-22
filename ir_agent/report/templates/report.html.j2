@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IR-AGENT · Attack Path Report · Devel Group</title>
+<meta name="generator" content="Devel Group · Red Spears Labs · https://www.devel.group">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+       DEVEL GROUP · Red Spears Labs · Intelligence-Driven Cybersecurity
+       https://www.devel.group · Apache-2.0
+     ───────────────────────────────────────────────────────────── */
+  :root {
+    --ink:        #f5f5f1;
+    --paper:      #0d0f13;
+    --panel:      #14171d;
+    --panel-2:    #1a1d24;
+    --line:       #2a2e36;
+    --line-soft:  #1f232a;
+    --accent:     #e07a4a;
+    --accent-2:   #ffb56b;
+    --soft:       #98a0ac;
+    --confirmed:  #5fd47a;
+    --likely:     #e8b94c;
+    --hypothesis: #ff6a6a;
+    --code-bg:    #0a0b0e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--paper); color: var(--ink); line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.brand {
+    border-bottom: 1px solid var(--line);
+    padding: 36px 60px 28px;
+    background: linear-gradient(180deg, #0a0b0e 0%, var(--paper) 100%);
+    display: flex; align-items: center; gap: 28px;
+  }
+  header.brand img.logo {
+    height: 48px; width: auto; filter: drop-shadow(0 2px 12px rgba(224,122,74,0.25));
+  }
+  header.brand .title h1 {
+    margin: 0; font-size: 28px; letter-spacing: -0.4px;
+    font-weight: 600;
+  }
+  header.brand .title .sub {
+    color: var(--soft); margin-top: 4px; font-size: 14px;
+  }
+  header.brand .title .sub a {
+    color: var(--accent-2); text-decoration: none;
+  }
+  header.brand .spacer { flex: 1; }
+  header.brand .stamp {
+    text-align: right; color: var(--soft); font-size: 11px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  header.brand .stamp .v { color: var(--ink); font-size: 14px; letter-spacing: 0; }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 36px 60px 80px; }
+  section { margin-bottom: 44px; }
+
+  h2 {
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); border-bottom: 1px solid var(--line);
+    padding-bottom: 10px; margin-top: 0; margin-bottom: 18px;
+    font-weight: 600;
+  }
+
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 8px;
+  }
+  .meta-grid .cell {
+    background: var(--panel); padding: 16px 18px;
+    border: 1px solid var(--line);
+  }
+  .meta-grid .cell .k {
+    font-size: 10px; color: var(--soft);
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .meta-grid .cell .v { font-size: 22px; margin-top: 6px; font-weight: 600; }
+
+  .narrative {
+    white-space: pre-wrap; background: var(--panel); padding: 22px 26px;
+    border-left: 3px solid var(--accent); font-size: 14px; color: #e9ebee;
+  }
+
+  .graph {
+    background: var(--panel); border: 1px solid var(--line); padding: 22px;
+  }
+  .graph-node {
+    display: inline-block; vertical-align: top; margin: 10px;
+    padding: 14px 18px; border: 1px solid var(--line);
+    background: var(--panel-2);
+    min-width: 230px; max-width: 290px; position: relative;
+    transition: box-shadow .15s, transform .15s;
+  }
+  .graph-node:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .graph-node .badge {
+    position: absolute; top: -10px; left: 12px;
+    padding: 2px 9px; font-size: 9px; letter-spacing: 1.5px;
+    text-transform: uppercase; font-weight: 600;
+    background: var(--accent); color: #0d0f13;
+  }
+  .graph-node.confirmed   { border-left: 3px solid var(--confirmed); }
+  .graph-node.likely      { border-left: 3px solid var(--likely); }
+  .graph-node.hypothesis  { border-left: 3px solid var(--hypothesis); }
+  .graph-node .phase {
+    font-size: 10px; color: var(--soft);
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .graph-node .label { font-size: 14px; margin: 4px 0 8px; font-weight: 600; color: var(--ink); }
+  .graph-node .technique { font-size: 12px; color: var(--accent-2); }
+  .graph-node .evidence { font-size: 11px; color: var(--soft); margin-top: 6px; }
+  .graph-node .evidence code { background: var(--code-bg); }
+  .arrow { text-align: center; color: var(--accent); margin: -4px 0; font-size: 20px; }
+
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--line);
+  }
+  th, td {
+    border-bottom: 1px solid var(--line-soft); padding: 10px 14px;
+    text-align: left; vertical-align: top; font-size: 13px;
+  }
+  th {
+    background: #0f1217; font-weight: 600;
+    color: var(--soft); text-transform: uppercase;
+    font-size: 10px; letter-spacing: 1.5px;
+  }
+  tr:last-child td { border-bottom: 0; }
+
+  code {
+    font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
+    font-size: 12px; background: var(--code-bg); color: var(--accent-2);
+    padding: 1px 6px; border-radius: 2px;
+  }
+
+  .runbook-card {
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 18px 22px; margin-bottom: 14px;
+    border-left: 3px solid var(--accent);
+  }
+  .runbook-card .pri {
+    float: right; font-size: 10px; color: var(--soft);
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .runbook-card h3 { margin: 0 0 8px; font-size: 15px; color: var(--ink); }
+  .runbook-card pre {
+    background: var(--code-bg); color: #d8e0e8; padding: 14px;
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+    overflow-x: auto; margin: 8px 0; border: 1px solid var(--line-soft);
+  }
+  .approval {
+    display: inline-block; background: rgba(224,122,74,.12);
+    color: var(--accent-2); border: 1px solid var(--accent);
+    padding: 3px 10px; font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 8px; font-weight: 600;
+  }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 26px 60px 40px;
+    color: var(--soft); font-size: 12px; text-align: center;
+  }
+  footer .row { display: flex; justify-content: center; gap: 24px; }
+  footer a { color: var(--accent-2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .tagline {
+    margin-top: 6px; font-style: italic; color: var(--soft); font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <img class="logo"
+       src="https://devel.group/wp-content/uploads/2026/02/Logo-Devel.svg"
+       alt="Devel Group">
+  <div class="title">
+    <h1>Incident Response · Attack Path Report</h1>
+    <div class="sub">
+      Reconstructed by IR-AGENT
+      · <a href="https://www.devel.group" target="_blank" rel="noopener">Devel Group · Red Spears Labs</a>
+      · Intelligence-Driven Cybersecurity
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="stamp">
+    <div>Cloud · <span class="v">{{ report.cloud|upper }}</span></div>
+    <div style="margin-top: 4px">{{ report.generated_at }}</div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="cell"><div class="k">Cloud</div><div class="v">{{ report.cloud|upper }}</div></div>
+      <div class="cell"><div class="k">Iterations</div><div class="v">{{ report.iterations }}</div></div>
+      <div class="cell"><div class="k">Nodes</div><div class="v">{{ report.graph.nodes|length }}</div></div>
+      <div class="cell"><div class="k">Staged actions</div><div class="v">{{ report.staged_actions|length }}</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Executive Summary</h2>
+    <div class="narrative">{{ report.narrative or "(no narrative produced)" }}</div>
+  </section>
+
+  <section>
+    <h2>Attack Path</h2>
+    <div class="graph">
+      {% for node in report.graph.nodes %}
+      <div class="graph-node {{ node.confidence }}">
+        <span class="badge">{{ node.confidence }}</span>
+        <div class="phase">{{ node.phase }}</div>
+        <div class="label">{{ node.label }}</div>
+        {% if node.attack_technique %}
+        <div class="technique">{{ node.attack_technique }} · {{ node.attack_technique_name }}</div>
+        {% endif %}
+        {% if node.entity_kind %}
+        <div class="evidence">{{ node.entity_kind }} = <code>{{ node.entity_value }}</code></div>
+        {% endif %}
+        <div class="evidence">{{ node.evidence|length }} evidence ref(s)</div>
+      </div>
+      {% if not loop.last %}<div class="arrow">↓</div>{% endif %}
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h2>MITRE ATT&amp;CK Coverage</h2>
+    <table>
+      <thead><tr><th>Technique ID</th><th>Name</th><th>Phase</th></tr></thead>
+      <tbody>
+      {% for t in report.mitre_coverage %}
+        <tr><td><code>{{ t.id }}</code></td><td>{{ t.name }}</td><td>{{ t.phase }}</td></tr>
+      {% else %}
+        <tr><td colspan="3"><em>No techniques mapped.</em></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Containment Runbook · staged · pending approval</h2>
+    {% for a in report.staged_actions %}
+    <div class="runbook-card">
+      <span class="pri">priority {{ loop.index }}</span>
+      <span class="approval">approval required</span>
+      <h3>{{ a.result.runbook }}{% if a.result.phase %} · {{ a.result.phase }}{% endif %}</h3>
+      <p><strong>Rationale:</strong> {{ a.result.rationale or a.parameters.rationale or "" }}</p>
+      {% if a.result.action %}<p><strong>Action:</strong> {{ a.result.action }}</p>{% endif %}
+      {% if a.result.command %}<pre>{{ a.result.command }}</pre>{% endif %}
+      {% if a.result.blast_radius %}<p><strong>Blast radius:</strong> {{ a.result.blast_radius }}</p>{% endif %}
+      {% if a.result.rollback %}<p><strong>Rollback:</strong> {{ a.result.rollback }}</p>{% endif %}
+    </div>
+    {% else %}
+    <p><em>No staged actions for this investigation.</em></p>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Tool-call trace</h2>
+    <table>
+      <thead><tr><th style="width:40px">#</th><th>Tool</th><th>Parameters</th></tr></thead>
+      <tbody>
+      {% for c in report.tool_calls %}
+        <tr><td>{{ loop.index }}</td><td><code>{{ c.tool_id }}</code></td><td><code>{{ c.params }}</code></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Graph payload</h2>
+    <p style="color: var(--soft); font-size: 12px;">Machine-readable graph for downstream tooling (SOAR / SIEM / case management):</p>
+    <pre style="background:var(--code-bg);color:#cfd6df;padding:18px;overflow-x:auto;font-size:11px;border:1px solid var(--line-soft);font-family:'JetBrains Mono',monospace;">{{ graph_json }}</pre>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <a href="https://www.devel.group" target="_blank" rel="noopener">www.devel.group</a>
+    <span>·</span>
+    <span>Devel Group · Red Spears Labs</span>
+    <span>·</span>
+    <span>Apache-2.0</span>
+  </div>
+  <div class="tagline">Intelligence-Driven Cybersecurity · Redefining digital protection through strategy, AI, and execution.</div>
+</footer>
+
+</body>
+</html>

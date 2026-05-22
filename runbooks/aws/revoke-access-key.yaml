@@ -1,0 +1,26 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: aws
+runbook: revoke-access-key
+phase: contain
+
+action: |
+  Mark the IAM access key as Inactive. The key continues to exist but
+  cannot authenticate any further STS / IAM calls.
+
+command: |
+  aws iam update-access-key \
+    --access-key-id ${access_key_id} \
+    --user-name ${username} \
+    --status Inactive
+
+blast_radius: |
+  All processes / workloads currently using this access key will start
+  receiving InvalidClientTokenId / SignatureDoesNotMatch errors within
+  ~minutes. If the key powers a production workload, expect immediate
+  service impact. Pair with `rescope-role` if the key is on an instance
+  profile.
+
+rollback: |
+  Set status back to Active:
+  aws iam update-access-key --access-key-id ${access_key_id} \
+    --user-name ${username} --status Active

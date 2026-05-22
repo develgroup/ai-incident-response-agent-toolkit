@@ -1,0 +1,13 @@
+{
+  "source": "guardduty",
+  "finding_id": "abcd1234-5678-90ef-aaaa-bbbbccccdddd",
+  "type": "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration",
+  "severity": 8.5,
+  "account_id": "444455556666",
+  "region": "us-east-1",
+  "resource_arn": "arn:aws:iam::444455556666:role/web-prod-ec2",
+  "access_key_id": "AKIAEXAMPLELEAKED123",
+  "source_ip": "198.51.100.7",
+  "first_seen": "2026-05-19T12:14:02Z",
+  "description": "Anomalous S3 API call from unrecognized IP using a role-issued temporary credential."
+}

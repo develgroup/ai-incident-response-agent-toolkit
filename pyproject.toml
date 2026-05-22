@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ir-agent"
+version = "0.1.0"
+description = "AI-driven incident response — reconstruct the full attack path of a cloud breach, MITRE-mapped, with staged containment."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Devel Group · Red Spears Labs", email = "ir@develgroup.example" }]
+keywords = ["incident-response", "soc", "siem", "cloud-security", "mitre-attack", "claude", "anthropic"]
+
+dependencies = [
+    "anthropic>=0.45.0",
+    "boto3>=1.34.0",
+    "azure-identity>=1.16.0",
+    "azure-mgmt-monitor>=6.0.0",
+    "msgraph-sdk>=1.5.0",
+    "httpx>=0.27.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.1.0",
+    "rich>=13.7.0",
+    "click>=8.1.0",
+    "pydantic>=2.6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "ruff>=0.5.0", "mypy>=1.10.0"]
+yara = ["yara-python>=4.5.0"]
+
+[project.scripts]
+ir-agent = "ir_agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/develgroup/ai-incident-response-agent-toolkit"
+Issues = "https://github.com/develgroup/ai-incident-response-agent-toolkit/issues"
+
+[tool.setuptools.packages.find]
+include = ["ir_agent*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

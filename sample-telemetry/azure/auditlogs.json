@@ -1,0 +1,43 @@
+[
+  {
+    "id": "audit-1",
+    "activityDateTime": "2026-05-19T12:12:00Z",
+    "activityDisplayName": "Update application - Certificates and secrets management",
+    "category": "ApplicationManagement",
+    "initiatedBy": {
+      "user": { "userPrincipalName": "alice@acme.example", "id": "alice-objectid" }
+    },
+    "targetResources": [
+      {
+        "id": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+        "displayName": "Acme Reporting Connector",
+        "type": "Application",
+        "modifiedProperties": [
+          {
+            "displayName": "KeyDescription",
+            "newValue": "[\"KeyIdentifier=NEW_PWD_CRED\",\"KeyType=Password\"]",
+            "oldValue": "[]"
+          }
+        ]
+      }
+    ],
+    "result": "success"
+  },
+  {
+    "id": "audit-2",
+    "activityDateTime": "2026-05-19T12:16:30Z",
+    "activityDisplayName": "Add app role assignment to service principal",
+    "category": "ApplicationManagement",
+    "initiatedBy": {
+      "user": { "userPrincipalName": "alice@acme.example", "id": "alice-objectid" }
+    },
+    "targetResources": [
+      {
+        "id": "spn-acme-reporting-connector",
+        "type": "ServicePrincipal",
+        "displayName": "Acme Reporting Connector"
+      }
+    ],
+    "result": "success"
+  }
+]

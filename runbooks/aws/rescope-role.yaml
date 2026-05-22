@@ -1,0 +1,32 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: aws
+runbook: rescope-role
+phase: eradicate
+
+action: |
+  Detach the over-permissive managed policy from the role, and optionally
+  attach a least-privilege replacement. This removes the abused privilege
+  surface without deleting the role (which would break any legitimate
+  workload still using it).
+
+command: |
+  # 1) Detach the abused policy.
+  aws iam detach-role-policy \
+    --role-name ${role_name} \
+    --policy-arn ${policy_arn_to_detach}
+
+  # 2) Attach the least-privilege replacement (optional).
+  # aws iam attach-role-policy \
+  #   --role-name ${role_name} \
+  #   --policy-arn ${replacement_policy_arn}
+
+blast_radius: |
+  Any current API call that depended on the wildcard policy will start
+  returning AccessDenied. If the role is an EC2 instance profile or a
+  Lambda execution role with live traffic, the workload may degrade or
+  fail until the replacement policy is in place.
+
+rollback: |
+  Re-attach the original policy:
+  aws iam attach-role-policy --role-name ${role_name} \
+    --policy-arn ${policy_arn_to_detach}

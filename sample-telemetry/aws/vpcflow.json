@@ -1,0 +1,20 @@
+[
+  {
+    "srcAddr": "10.0.12.45",
+    "dstAddr": "198.51.100.7",
+    "dstPort": 443,
+    "protocol": 6,
+    "bytes": 1024000,
+    "action": "ACCEPT",
+    "start": "2026-05-19T09:30:00Z"
+  },
+  {
+    "srcAddr": "10.0.12.45",
+    "dstAddr": "10.0.42.12",
+    "dstPort": 5432,
+    "protocol": 6,
+    "bytes": 86000,
+    "action": "ACCEPT",
+    "start": "2026-05-19T09:25:00Z"
+  }
+]

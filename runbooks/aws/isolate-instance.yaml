@@ -1,0 +1,27 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: aws
+runbook: isolate-instance
+phase: contain
+
+action: |
+  Replace the EC2 instance's network interface security groups with a
+  single, pre-created quarantine SG that has no inbound rules and a
+  single outbound rule to the IR collector endpoint (or no egress at all).
+  The host stays online for memory + disk forensics but cannot continue
+  lateral movement or exfiltration.
+
+command: |
+  aws ec2 modify-instance-attribute \
+    --instance-id ${instance_id} \
+    --groups ${quarantine_sg_id}
+
+blast_radius: |
+  Any external dependency the workload has (DB, queue, third-party API)
+  becomes unreachable from this instance. If this is an active production
+  host, you've taken it out of rotation — confirm the load balancer has
+  removed it first.
+
+rollback: |
+  Re-attach the original security group set:
+  aws ec2 modify-instance-attribute --instance-id ${instance_id} \
+    --groups <original sg-ids>

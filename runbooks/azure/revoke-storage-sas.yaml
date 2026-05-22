@@ -1,0 +1,26 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: azure
+runbook: revoke-storage-sas
+phase: eradicate
+
+action: |
+  Regenerate the storage-account access key that signed the abused SAS
+  token. Every SAS signed with that key — including the attacker's —
+  becomes invalid immediately.
+
+command: |
+  POST https://management.azure.com${storage_account_id}/regenerateKey?api-version=2023-05-01
+  Body: { "keyName": "${key_name}" }
+
+  # CLI equivalent:
+  az storage account keys renew \
+    --resource-group <rg> \
+    --account-name <account-name> \
+    --key ${key_name}
+
+blast_radius: |
+  Every legitimate consumer that signs SAS with this key stops working
+  until they pick up the new key. Stage with a key-rollover communication.
+
+rollback: |
+  None — once a key is rotated, the old value is gone.

@@ -1,0 +1,49 @@
+# Enrichment service endpoints + scoring policy.
+# Each entry points the ir-agent at the matching docker-compose service.
+
+services:
+  virustotal:
+    url: ${VIRUSTOTAL_URL:-http://localhost:8081}
+    rate_limit_per_minute: 4       # free-tier VT public API
+    timeout_seconds: 15
+    malicious_threshold: 3         # ≥3 engines flagged → malicious
+
+  abuseipdb:
+    url: ${ABUSEIPDB_URL:-http://localhost:8082}
+    rate_limit_per_minute: 60
+    timeout_seconds: 10
+    malicious_threshold: 50        # abuseConfidenceScore ≥50 → malicious
+
+  shodan:
+    url: ${SHODAN_URL:-http://localhost:8083}
+    rate_limit_per_minute: 60
+    timeout_seconds: 10
+    suspicious_tags:
+      - tor
+      - proxy
+      - vpn
+      - hosting
+
+  malwarebazaar:
+    url: ${MALWAREBAZAAR_URL:-http://localhost:8084}
+    rate_limit_per_minute: 60
+    timeout_seconds: 10
+
+  yara:
+    url: ${YARA_URL:-http://localhost:8085}
+    rate_limit_per_minute: 120
+    timeout_seconds: 30
+
+# Two-source confirmation matrix.
+# A node is `confirmed` only when at least one pair below both return malicious.
+two_source_rules:
+  ip_malicious:
+    - [abuseipdb, shodan]
+    - [abuseipdb, virustotal]
+    - [shodan, virustotal]
+  hash_malicious:
+    - [virustotal, malwarebazaar]
+    - [virustotal, yara]
+    - [malwarebazaar, yara]
+  domain_malicious:
+    - [virustotal, abuseipdb]

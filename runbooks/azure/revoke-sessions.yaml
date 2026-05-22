@@ -1,0 +1,24 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: azure
+runbook: revoke-sessions
+phase: contain
+
+action: |
+  Call Microsoft Graph `revokeSignInSessions` on the user. This invalidates
+  every active refresh token and forces re-authentication everywhere.
+
+command: |
+  POST https://graph.microsoft.com/v1.0/users/${user_object_id}/revokeSignInSessions
+  Authorization: Bearer <access_token>
+
+  # CLI equivalent:
+  az rest --method POST \
+    --uri "https://graph.microsoft.com/v1.0/users/${user_object_id}/revokeSignInSessions"
+
+blast_radius: |
+  The user is prompted to sign in again on every device and every app.
+  Active sessions on VPN, SaaS apps, M365 desktop apps all terminate.
+  Pre-warn the user if they are a real employee.
+
+rollback: |
+  None required — the next legitimate sign-in restores access.

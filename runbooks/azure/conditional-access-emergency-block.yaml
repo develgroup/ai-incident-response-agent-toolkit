@@ -1,0 +1,28 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: azure
+runbook: conditional-access-emergency-block
+phase: contain
+
+action: |
+  Create (or enable) a Conditional Access policy that blocks all sessions
+  for the specific user across every cloud app.
+
+command: |
+  POST https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies
+  Body:
+  {
+    "displayName": "IR-EMERGENCY-BLOCK-${user_object_id}",
+    "state": "enabled",
+    "conditions": {
+      "users":        { "includeUsers": ["${user_object_id}"] },
+      "applications": { "includeApplications": ["All"] }
+    },
+    "grantControls": { "operator": "OR", "builtInControls": ["block"] }
+  }
+
+blast_radius: |
+  The named user is blocked from every cloud app via every channel. If a
+  real employee, coordinate with their manager and HR.
+
+rollback: |
+  DELETE the policy by id when the investigation closes.

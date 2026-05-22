@@ -1,0 +1,31 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: aws
+runbook: block-ip-waf
+phase: contain
+
+action: |
+  Add the offending CIDR to an AWS WAFv2 IP set that is referenced by a
+  blocking rule on the public-facing WAF. This drops new requests from
+  that source at the edge.
+
+command: |
+  # Fetch current IP set state (capture LockToken from the response).
+  IP_SET=$(aws wafv2 get-ip-set --scope REGIONAL \
+    --id $(echo ${ip_set_arn} | cut -d/ -f4) \
+    --name $(echo ${ip_set_arn} | cut -d/ -f3))
+
+  # Append CIDR and update with LockToken.
+  aws wafv2 update-ip-set --scope REGIONAL \
+    --id $(echo ${ip_set_arn} | cut -d/ -f4) \
+    --name $(echo ${ip_set_arn} | cut -d/ -f3) \
+    --lock-token <LockToken from get-ip-set> \
+    --addresses "${cidr}"
+
+blast_radius: |
+  Only requests sourcing from ${cidr} are dropped. No customer-network
+  impact unless the CIDR is shared (NAT / CGN — verify before pushing
+  large /24 or larger).
+
+rollback: |
+  Remove the CIDR via update-ip-set with the address omitted; or delete
+  the rule referencing this IP set.

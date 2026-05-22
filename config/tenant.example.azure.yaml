@@ -1,0 +1,66 @@
+# Azure Tenant Profile — example.
+# Copy to `config/tenant.azure.yaml` and fill in for your environment.
+#
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+
+tenant:
+  tenant_id: "11111111-2222-3333-4444-555555555555"
+  primary_domain: acme.example
+  verified_domains: [acme.example, acme.onmicrosoft.com]
+  license_skus: [E5, EMS_E5, Defender_P2]
+
+subscriptions:
+  - id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    name: prod
+    mg: platform/prod
+  - id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    name: data
+    mg: platform/data
+
+ir_principal:
+  kind: service_principal
+  object_id: "66666666-7777-8888-9999-000000000000"
+  graph_roles: [SecurityReader, AuditLog.Read.All, Reports.Read.All, Directory.Read.All]
+  rbac_role: Reader
+  sentinel_role: Microsoft Sentinel Reader
+
+log_estate:
+  sentinel_workspace:
+    resource_id: "/subscriptions/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/resourceGroups/sec/providers/Microsoft.OperationalInsights/workspaces/acme-sentinel"
+    workspace_id: "REPLACE_ME"
+    retention_days: 90
+  defender_xdr_enabled: true
+  mde_advanced_hunting: true
+  diagnostic_settings:
+    activity_log_to_sentinel: true
+    entra_signin_to_sentinel: true
+    entra_audit_to_sentinel: true
+    graph_activity_to_sentinel: true
+    office_audit_to_sentinel: true
+    keyvault_to_sentinel: true
+    storage_diagnostics_to_sentinel: [acmecustomerspii]
+  purview_audit_advanced: true
+
+identity:
+  break_glass_accounts:
+    - "bg-1@acme.onmicrosoft.com"
+    - "bg-2@acme.onmicrosoft.com"
+  privileged_roles:
+    - Global Administrator
+    - Privileged Role Administrator
+    - Conditional Access Administrator
+    - Security Administrator
+    - Application Administrator
+    - Cloud Application Administrator
+  pim_enforced: true
+  named_locations_trusted:
+    - corp-egress-1
+    - corp-egress-2
+
+high_value_assets:
+  key_vaults_prod:
+    - "/subscriptions/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/resourceGroups/rg-prod/providers/Microsoft.KeyVault/vaults/acme-prod-kv"
+  storage_pii:
+    - acmecustomerspii
+  sql_prod:
+    - "/subscriptions/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/resourceGroups/rg-prod/providers/Microsoft.Sql/servers/acme-sql-prod"

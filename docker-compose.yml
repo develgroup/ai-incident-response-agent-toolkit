@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────────
+#   AI Incident Response — Enrichment microservices
+#
+#   Each enrichment provider runs as a small HTTP service that the
+#   ir-agent calls. Keeping them in containers means: clean key
+#   isolation, easy rate-limit policy per service, and the ability to
+#   swap providers without touching the agent.
+# ─────────────────────────────────────────────────────────────────
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+
+services:
+  virustotal:
+    build: ./enrichment-agents/virustotal
+    container_name: ir-enrichment-virustotal
+    environment:
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    networks: [enrichment]
+
+  abuseipdb:
+    build: ./enrichment-agents/abuseipdb
+    container_name: ir-enrichment-abuseipdb
+    environment:
+      - ABUSEIPDB_API_KEY=${ABUSEIPDB_API_KEY}
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+    networks: [enrichment]
+
+  shodan:
+    build: ./enrichment-agents/shodan
+    container_name: ir-enrichment-shodan
+    environment:
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+    ports:
+      - "8083:8080"
+    restart: unless-stopped
+    networks: [enrichment]
+
+  malwarebazaar:
+    build: ./enrichment-agents/malwarebazaar
+    container_name: ir-enrichment-malwarebazaar
+    environment:
+      - MALWAREBAZAAR_API_KEY=${MALWAREBAZAAR_API_KEY}
+    ports:
+      - "8084:8080"
+    restart: unless-stopped
+    networks: [enrichment]
+
+  yara:
+    build: ./enrichment-agents/yara
+    container_name: ir-enrichment-yara
+    volumes:
+      - ./enrichment-agents/yara/rules:/app/rules:ro
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
+    networks: [enrichment]
+
+networks:
+  enrichment:
+    driver: bridge

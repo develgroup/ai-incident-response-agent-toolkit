@@ -1,0 +1,28 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: aws
+runbook: revoke-snapshot-share
+phase: eradicate
+
+action: |
+  Remove the external account from the EBS snapshot's
+  createVolumePermission list. Any in-progress copy by that account will
+  complete (AWS does not abort in-flight copies), but no new copies will
+  be possible.
+
+command: |
+  aws ec2 modify-snapshot-attribute \
+    --snapshot-id ${snapshot_id} \
+    --attribute createVolumePermission \
+    --operation-type remove \
+    --user-ids ${external_account_id}
+
+blast_radius: |
+  Removes external account ${external_account_id} from the share list.
+  Any legitimate cross-account copy job depending on this share will
+  start failing. Confirm no legitimate use case before pushing.
+
+rollback: |
+  Re-add the external account (only if the share was legitimate):
+  aws ec2 modify-snapshot-attribute --snapshot-id ${snapshot_id} \
+    --attribute createVolumePermission --operation-type add \
+    --user-ids ${external_account_id}

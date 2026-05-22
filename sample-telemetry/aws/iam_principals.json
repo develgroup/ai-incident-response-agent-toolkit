@@ -1,0 +1,20 @@
+[
+  {
+    "Arn": "arn:aws:iam::444455556666:role/web-prod-ec2",
+    "kind": "role",
+    "accessKeys": ["AKIAEXAMPLELEAKED123"],
+    "AttachedPolicies": [
+      { "PolicyName": "S3FullAccessWildcard", "PolicyArn": "arn:aws:iam::aws:policy/AmazonS3FullAccess" }
+    ],
+    "AssumeRolePolicyDocument": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": { "Service": "ec2.amazonaws.com" },
+          "Action": "sts:AssumeRole"
+        }
+      ]
+    }
+  }
+]

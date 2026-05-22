@@ -1,0 +1,35 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: windows
+runbook: stop-disable-service
+phase: eradicate
+
+action: |
+  Stop and disable a Windows service on '${computer}'. Used to terminate
+  attacker-installed services (PsExec's PSEXESVC, custom services from
+  Sliver/Cobalt Strike beacon installs, etc.).
+
+command: |
+  # Stop the service
+  Stop-Service -Name "${service_name}" -Force
+
+  # Disable so it cannot restart on reboot
+  Set-Service -Name "${service_name}" -StartupType Disabled
+
+  # Remove entirely (only after evidence preservation)
+  # sc.exe delete "${service_name}"
+
+  # Remote variant
+  Invoke-Command -ComputerName ${computer} -ScriptBlock {
+    Stop-Service  -Name "$using:service_name" -Force
+    Set-Service   -Name "$using:service_name" -StartupType Disabled
+  }
+
+blast_radius: |
+  The named service stops immediately. Any dependent process running
+  under it is killed by the SCM. Verify the service is NOT a legitimate
+  application before pushing — false positives here cause production
+  outages.
+
+rollback: |
+  Set-Service -Name "${service_name}" -StartupType Automatic
+  Start-Service -Name "${service_name}"

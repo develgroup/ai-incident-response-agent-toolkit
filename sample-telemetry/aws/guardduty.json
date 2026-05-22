@@ -1,0 +1,35 @@
+[
+  {
+    "Id": "abcd1234-5678-90ef-aaaa-bbbbccccdddd",
+    "Type": "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration",
+    "Severity": 8.5,
+    "AccountId": "444455556666",
+    "Region": "us-east-1",
+    "CreatedAt": "2026-05-19T12:14:02Z",
+    "Title": "EC2 instance role credentials used from external IP",
+    "Description": "AssumeRole credentials for role/web-prod-ec2 were used from 198.51.100.7 to call S3 GetObject on an unusual bucket.",
+    "Resource": {
+      "ResourceType": "AccessKey",
+      "AccessKeyDetails": {
+        "AccessKeyId": "AKIAEXAMPLELEAKED123",
+        "PrincipalId": "AROAEXAMPLEXXXXX:i-0abc1234def567890",
+        "UserType": "AssumedRole",
+        "UserName": "web-prod-ec2"
+      }
+    },
+    "Service": {
+      "Action": {
+        "ActionType": "AWS_API_CALL",
+        "AwsApiCallAction": {
+          "Api": "GetObject",
+          "ServiceName": "s3.amazonaws.com",
+          "RemoteIpDetails": {
+            "IpAddressV4": "198.51.100.7",
+            "Country": { "CountryName": "Unknown" },
+            "Organization": { "Org": "Hosting Provider" }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,64 @@
+# AWS Tenant Profile — example.
+# Copy to `config/tenant.aws.yaml` and fill in for your environment.
+# Anything not in this file is treated as out-of-scope.
+
+organization:
+  org_id: o-xxxxxxxxxx
+  management_account: "111122223333"
+
+accounts:
+  - id: "111122223333"
+    name: mgmt
+    regions: [us-east-1]
+  - id: "444455556666"
+    name: prod
+    regions: [us-east-1, us-west-2, eu-west-1]
+  - id: "777788889999"
+    name: data
+    regions: [us-east-1]
+
+ir_role:
+  name: IRReadOnly
+  arn_template: "arn:aws:iam::{account_id}:role/IRReadOnly"
+  external_id: "REPLACE_ME"
+
+log_estate:
+  cloudtrail:
+    org_trail_arn: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-mgmt-events"
+    data_events_enabled_for: [s3, lambda, dynamodb]
+    lake_event_data_store_arn: ""
+  vpc_flow_logs:
+    destination: "cw:/aws/vpc/flowlogs"
+    version: 5
+  guardduty:
+    detector_ids_by_region:
+      us-east-1: "REPLACE_ME"
+      us-west-2: "REPLACE_ME"
+  security_hub:
+    enabled_regions: [us-east-1, us-west-2]
+  athena:
+    workgroup: ir
+    results_bucket: "s3://ir-athena-results/"
+  s3_server_access_logs_bucket: "s3://acme-s3-access-logs/"
+  alb_logs_bucket: "s3://acme-alb-logs/"
+
+high_value_assets:
+  rds_prod_arns:
+    - "arn:aws:rds:us-east-1:444455556666:cluster:prod-orders"
+  kms_keys_prod:
+    - "arn:aws:kms:us-east-1:444455556666:key/REPLACE_ME"
+  s3_pii_buckets:
+    - acme-customers-pii
+
+identity:
+  idp_kind: iam-identity-center  # or external-okta | iam-users-only
+  break_glass_users:
+    - "root@acme.example"
+    - "ops-bg-1"
+  privileged_groups:
+    - AdministratorAccess
+    - BillingAdmins
+
+quarantine:
+  security_group_id: "sg-quarantine-deny-all"
+  waf_ip_set_arn: "arn:aws:wafv2:us-east-1:111122223333:regional/ipset/ir-blocklist/REPLACE"

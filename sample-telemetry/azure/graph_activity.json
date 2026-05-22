@@ -1,0 +1,11 @@
+[
+  {
+    "TimeGenerated": "2026-05-19T12:18:11Z",
+    "UserPrincipalName": "spn-acme-reporting-connector",
+    "AppId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+    "RequestUri": "https://graph.microsoft.com/v1.0/users/alice/messages?$top=200",
+    "IPAddress": "203.0.113.55",
+    "UserAgent": "azsdk-python-graphrbac/0.61.1 Python/3.11.0",
+    "ResponseStatusCode": 200
+  }
+]

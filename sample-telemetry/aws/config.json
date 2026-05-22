@@ -1,0 +1,26 @@
+[
+  {
+    "configurationItemCaptureTime": "2026-05-18T22:01:00Z",
+    "configurationItemStatus": "OK",
+    "resourceType": "AWS::IAM::Role",
+    "resourceId": "AROAEXAMPLEXXXXX",
+    "resourceName": "web-prod-ec2",
+    "configuration": {
+      "AttachedPolicies": [
+        { "PolicyName": "S3FullAccessWildcard", "PolicyArn": "arn:aws:iam::aws:policy/AmazonS3FullAccess" }
+      ]
+    }
+  },
+  {
+    "configurationItemCaptureTime": "2026-04-02T15:00:00Z",
+    "configurationItemStatus": "OK",
+    "resourceType": "AWS::IAM::Role",
+    "resourceId": "AROAEXAMPLEXXXXX",
+    "resourceName": "web-prod-ec2",
+    "configuration": {
+      "AttachedPolicies": [
+        { "PolicyName": "S3ReadOnlyAccess", "PolicyArn": "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess" }
+      ]
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "source": "defender_xdr",
+  "alert_id": "da-abcdef-1234567890",
+  "title": "Suspicious addition of a credential to an OAuth app",
+  "severity": "High",
+  "tenant_id": "11111111-2222-3333-4444-555555555555",
+  "target_app_id": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+  "actor_upn": "alice@acme.example",
+  "ip_address": "198.51.100.7",
+  "correlation_id": "ccccccc1-2222-3333-4444-555555555555",
+  "first_seen": "2026-05-19T12:14:02Z",
+  "description": "Privileged service principal received a new passwordCredential from an interactive sign-in flagged as anomalous token by Identity Protection."
+}

@@ -1,0 +1,32 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: windows
+runbook: remove-scheduled-task
+phase: eradicate
+
+action: |
+  Remove the scheduled task '${task_name}' on '${computer}'. Use after
+  TaskScheduler event 4698 / 106 surfaces an attacker-created task. Pair
+  with kill-process for any currently-running instance of the task action.
+
+command: |
+  # Local
+  Unregister-ScheduledTask -TaskName "${task_name}" -Confirm:$false
+
+  # Remote (via WinRM, requires the source host has rights)
+  Invoke-Command -ComputerName ${computer} -ScriptBlock {
+    Unregister-ScheduledTask -TaskName "$using:task_name" -Confirm:$false
+  }
+
+  # schtasks.exe fallback:
+  schtasks /Delete /TN "${task_name}" /F /S ${computer}
+
+blast_radius: |
+  Only the named task is removed. If the attacker registered multiple
+  persistence tasks under different names, this leaves the others intact
+  — always enumerate `Get-ScheduledTask` first via
+  `windows.scheduled_tasks.list` and remove each.
+
+rollback: |
+  Restore from the task XML backup if it was a misfire:
+    schtasks /Create /XML <backup.xml> /TN "${task_name}"
+  (no rollback possible if no XML was preserved before deletion)

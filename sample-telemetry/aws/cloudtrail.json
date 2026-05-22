@@ -1,0 +1,131 @@
+[
+  {
+    "eventID": "ct-evt-0001",
+    "eventName": "GetObject",
+    "eventTime": "2026-05-19T09:02:11Z",
+    "eventSource": "s3.amazonaws.com",
+    "sourceIPAddress": "198.51.100.7",
+    "userAgent": "aws-cli/2.13.0 Python/3.11.4 Linux/5.15.0",
+    "awsRegion": "us-east-1",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "principalId": "AROAEXAMPLEXXXXX:i-0abc1234def567890",
+      "arn": "arn:aws:sts::444455556666:assumed-role/web-prod-ec2/i-0abc1234def567890",
+      "accessKeyId": "AKIAEXAMPLELEAKED123",
+      "sessionContext": {
+        "sessionIssuer": {
+          "type": "Role",
+          "principalId": "AROAEXAMPLEXXXXX",
+          "arn": "arn:aws:iam::444455556666:role/web-prod-ec2",
+          "userName": "web-prod-ec2"
+        }
+      }
+    },
+    "requestParameters": {
+      "bucketName": "acme-customers-pii",
+      "key": "exports/2026-05/customers-batch-001.csv"
+    },
+    "resources": [
+      { "ResourceName": "acme-customers-pii", "ResourceType": "AWS::S3::Bucket" }
+    ]
+  },
+  {
+    "eventID": "ct-evt-0002",
+    "eventName": "GetObject",
+    "eventTime": "2026-05-19T09:05:33Z",
+    "eventSource": "s3.amazonaws.com",
+    "sourceIPAddress": "198.51.100.7",
+    "userAgent": "aws-cli/2.13.0 Python/3.11.4 Linux/5.15.0",
+    "awsRegion": "us-east-1",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "accessKeyId": "AKIAEXAMPLELEAKED123",
+      "arn": "arn:aws:sts::444455556666:assumed-role/web-prod-ec2/i-0abc1234def567890",
+      "sessionContext": {
+        "sessionIssuer": {
+          "userName": "web-prod-ec2",
+          "arn": "arn:aws:iam::444455556666:role/web-prod-ec2"
+        }
+      }
+    },
+    "requestParameters": {
+      "bucketName": "acme-customers-pii",
+      "key": "exports/2026-05/customers-batch-002.csv"
+    }
+  },
+  {
+    "eventID": "ct-evt-0003",
+    "eventName": "PutUserPolicy",
+    "eventTime": "2026-05-19T09:11:50Z",
+    "eventSource": "iam.amazonaws.com",
+    "sourceIPAddress": "198.51.100.7",
+    "userAgent": "aws-cli/2.13.0",
+    "awsRegion": "us-east-1",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "accessKeyId": "AKIAEXAMPLELEAKED123",
+      "arn": "arn:aws:sts::444455556666:assumed-role/web-prod-ec2/i-0abc1234def567890",
+      "sessionContext": {
+        "sessionIssuer": {
+          "userName": "web-prod-ec2",
+          "arn": "arn:aws:iam::444455556666:role/web-prod-ec2"
+        }
+      }
+    },
+    "requestParameters": {
+      "userName": "svc-pipeline",
+      "policyName": "AdminWildcard",
+      "policyDocument": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}"
+    }
+  },
+  {
+    "eventID": "ct-evt-0004",
+    "eventName": "CreateDBSnapshot",
+    "eventTime": "2026-05-19T09:31:02Z",
+    "eventSource": "rds.amazonaws.com",
+    "sourceIPAddress": "198.51.100.7",
+    "userAgent": "aws-cli/2.13.0",
+    "awsRegion": "us-east-1",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "accessKeyId": "AKIAEXAMPLELEAKED123",
+      "arn": "arn:aws:sts::444455556666:assumed-role/web-prod-ec2/i-0abc1234def567890",
+      "sessionContext": {
+        "sessionIssuer": {
+          "userName": "web-prod-ec2",
+          "arn": "arn:aws:iam::444455556666:role/web-prod-ec2"
+        }
+      }
+    },
+    "requestParameters": {
+      "dBInstanceIdentifier": "prod-orders",
+      "dBSnapshotIdentifier": "irbreach-snap-001"
+    }
+  },
+  {
+    "eventID": "ct-evt-0005",
+    "eventName": "ModifySnapshotAttribute",
+    "eventTime": "2026-05-19T09:42:18Z",
+    "eventSource": "ec2.amazonaws.com",
+    "sourceIPAddress": "198.51.100.7",
+    "userAgent": "aws-cli/2.13.0",
+    "awsRegion": "us-east-1",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "accessKeyId": "AKIAEXAMPLELEAKED123",
+      "arn": "arn:aws:sts::444455556666:assumed-role/web-prod-ec2/i-0abc1234def567890",
+      "sessionContext": {
+        "sessionIssuer": {
+          "userName": "web-prod-ec2",
+          "arn": "arn:aws:iam::444455556666:role/web-prod-ec2"
+        }
+      }
+    },
+    "requestParameters": {
+      "snapshotId": "snap-0abc1234ef56789",
+      "createVolumePermission": {
+        "add": [{ "userId": "999988887777" }]
+      }
+    }
+  }
+]

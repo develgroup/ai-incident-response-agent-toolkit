@@ -1,0 +1,23 @@
+# DEVEL GROUP · Red Spears Labs · https://www.devel.group · Apache-2.0
+cloud: azure
+runbook: disable-spn
+phase: eradicate
+
+action: |
+  Set the service principal's `accountEnabled` to false. The SPN cannot
+  authenticate.
+
+command: |
+  PATCH https://graph.microsoft.com/v1.0/servicePrincipals/${spn_object_id}
+  Authorization: Bearer <access_token>
+  Body: { "accountEnabled": false }
+
+  # CLI equivalent:
+  az ad sp update --id ${spn_object_id} --set accountEnabled=false
+
+blast_radius: |
+  Every workflow that authenticates as this SPN — CI/CD pipelines,
+  background jobs, monitoring agents — stops. Notify the owning team.
+
+rollback: |
+  PATCH ... { "accountEnabled": true } to re-enable.

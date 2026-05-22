@@ -1,0 +1,80 @@
+[
+  {
+    "EventRecordID": 1184501,
+    "TimeCreated": "2026-05-19T10:01:55Z",
+    "Channel": "Security",
+    "EventID": 4624,
+    "Computer": "jump-host-02.acme.local",
+    "EventData": {
+      "TargetUserName": "admin-alice",
+      "TargetDomainName": "ACME",
+      "LogonType": 10,
+      "IpAddress": "198.51.100.7",
+      "WorkstationName": "ATTACKER-PC",
+      "AuthenticationPackageName": "Negotiate",
+      "LogonProcessName": "User32"
+    }
+  },
+  {
+    "EventRecordID": 1184502,
+    "TimeCreated": "2026-05-19T10:03:11Z",
+    "Channel": "Security",
+    "EventID": 4672,
+    "Computer": "jump-host-02.acme.local",
+    "EventData": {
+      "SubjectUserName": "admin-alice",
+      "PrivilegeList": "SeDebugPrivilege SeTcbPrivilege SeImpersonatePrivilege"
+    }
+  },
+  {
+    "EventRecordID": 1184503,
+    "TimeCreated": "2026-05-19T10:04:02Z",
+    "Channel": "Security",
+    "EventID": 4624,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "TargetUserName": "admin-alice",
+      "TargetDomainName": "ACME",
+      "LogonType": 3,
+      "IpAddress": "10.20.30.42",
+      "WorkstationName": "jump-host-02",
+      "AuthenticationPackageName": "NTLM"
+    }
+  },
+  {
+    "EventRecordID": 1184504,
+    "TimeCreated": "2026-05-19T10:04:18Z",
+    "Channel": "Security",
+    "EventID": 4624,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "TargetUserName": "SYSTEM",
+      "TargetDomainName": "NT AUTHORITY",
+      "LogonType": 5,
+      "ProcessName": "C:\\Windows\\PSEXESVC.exe"
+    }
+  },
+  {
+    "EventRecordID": 1184505,
+    "TimeCreated": "2026-05-19T10:04:55Z",
+    "Channel": "Security",
+    "EventID": 4698,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "SubjectUserName": "admin-alice",
+      "TaskName": "\\Acme\\OneDriveSyncMaintenance",
+      "TaskContent": "powershell.exe -nop -enc <base64-payload-omitted>"
+    }
+  },
+  {
+    "EventRecordID": 1184506,
+    "TimeCreated": "2026-05-19T10:08:33Z",
+    "Channel": "Security",
+    "EventID": 1102,
+    "Computer": "fin-app-03.acme.local",
+    "EventData": {
+      "SubjectUserName": "SYSTEM",
+      "Note": "The audit log was cleared."
+    }
+  }
+]

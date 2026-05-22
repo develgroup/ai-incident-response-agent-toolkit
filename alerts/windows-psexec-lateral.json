@@ -1,0 +1,11 @@
+{
+  "source": "cortex_xdr",
+  "alert_id": "xdr-2026-051901-9988",
+  "title": "Suspicious PsExec service install + LSASS access",
+  "severity": "High",
+  "computer": "fin-app-03.acme.local",
+  "user": "ACME\\admin-alice",
+  "source_ip": "198.51.100.7",
+  "first_seen": "2026-05-19T10:04:30Z",
+  "description": "EDR observed PSEXESVC.exe launching cmd.exe → powershell.exe -enc on fin-app-03, followed by lsass.exe access from C:\\Windows\\Temp\\update.exe with GrantedAccess 0x1010 (Mimikatz-class pattern). Initial admin-alice session originated from external IP 198.51.100.7 via RDP onto jump-host-02 minutes earlier."
+}

@@ -1,0 +1,652 @@
+# ─────────────────────────────────────────────────────────────────
+#   Tool registry — the single source of truth for the four-layer
+#   stack. The orchestrator reads this file, filters tools by the
+#   --cloud and --enrich flags, and converts the matching entries
+#   into Anthropic tool-use definitions.
+#
+#   Each tool entry maps directly to a Python function:
+#       ir_agent.tools.<module>.<callable>
+#
+#   Fields:
+#     id            : The tool ID exposed to the LLM (snake_case).
+#     phase         : enrichment | telemetry | action
+#     cloud         : aws | azure | gcp | any
+#     enrich_id     : (enrichment phase only) virustotal | abuseipdb |
+#                     shodan | malwarebazaar | yara — used by --enrich
+#                     subset selection.
+#     description   : What the LLM sees. Be precise — this drives tool
+#                     selection. Tell the model WHEN to use it.
+#     handler       : Dotted path to the Python function.
+#     input_schema  : JSON Schema. The LLM emits matching params.
+#     destructive   : true for stage_* actions. Used to enforce the
+#                     human-approval gate.
+# ─────────────────────────────────────────────────────────────────
+
+tools:
+
+  # ─── ENRICHMENT — "Is this entity known-bad?" ──────────────────
+
+  - id: virustotal.lookup
+    phase: enrichment
+    cloud: any
+    enrich_id: virustotal
+    description: |
+      Look up a file hash (MD5/SHA1/SHA256), URL, domain, or IP address in
+      VirusTotal. Returns multi-engine verdict, detections, and metadata.
+      Use when you need a reputation/detection verdict on an indicator.
+    handler: ir_agent.tools.enrichment.virustotal.lookup
+    input_schema:
+      type: object
+      properties:
+        indicator:
+          type: string
+          description: Hash, URL, domain, or IP to look up.
+        kind:
+          type: string
+          enum: [hash, url, domain, ip]
+          description: The indicator kind.
+      required: [indicator, kind]
+
+  - id: abuseipdb.check
+    phase: enrichment
+    cloud: any
+    enrich_id: abuseipdb
+    description: |
+      Check an IP's abuse history in AbuseIPDB. Returns abuseConfidenceScore
+      (0-100), total reports, and country/ISP context. Score >= 50 is a
+      strong signal of malicious infra.
+    handler: ir_agent.tools.enrichment.abuseipdb.check
+    input_schema:
+      type: object
+      properties:
+        ip:
+          type: string
+          description: The IPv4 or IPv6 address to score.
+        max_age_in_days:
+          type: integer
+          default: 90
+      required: [ip]
+
+  - id: shodan.host
+    phase: enrichment
+    cloud: any
+    enrich_id: shodan
+    description: |
+      Look up an IP in Shodan. Returns open ports, exposed services, banners,
+      hostnames, and tags (e.g. tor, vpn, hosting). Use as the SECOND source
+      after AbuseIPDB to confirm a node as `confirmed` rather than
+      `hypothesis`.
+    handler: ir_agent.tools.enrichment.shodan.host
+    input_schema:
+      type: object
+      properties:
+        ip:
+          type: string
+      required: [ip]
+
+  - id: malwarebazaar.query
+    phase: enrichment
+    cloud: any
+    enrich_id: malwarebazaar
+    description: |
+      Query MalwareBazaar by file hash. Returns malware family, tags, and
+      related samples. Pair with virustotal.lookup for a two-source malware
+      verdict.
+    handler: ir_agent.tools.enrichment.malwarebazaar.query
+    input_schema:
+      type: object
+      properties:
+        sha256:
+          type: string
+      required: [sha256]
+
+  - id: yara.scan
+    phase: enrichment
+    cloud: any
+    enrich_id: yara
+    description: |
+      Scan a file (by path or base64 content) against the local YARA rule
+      set. Returns matched rule names and tags. Use for rule-based
+      classification of a sample obtained from an EDR/host artifact.
+    handler: ir_agent.tools.enrichment.yara_scan.scan
+    input_schema:
+      type: object
+      properties:
+        content_b64:
+          type: string
+          description: Base64-encoded file contents (preferred).
+        path:
+          type: string
+          description: Local path readable by the yara service.
+      oneOf:
+        - { required: [content_b64] }
+        - { required: [path] }
+
+  # ─── TELEMETRY · AWS — "What actually happened?" ────────────────
+
+  - id: aws.cloudtrail.lookup
+    phase: telemetry
+    cloud: aws
+    description: |
+      Query AWS CloudTrail management events. Filter by event name, user
+      identity, source IP, or access key. Returns up to 500 matching events
+      in the time window. Use as the first call after any Point A from
+      GuardDuty or Security Hub.
+    handler: ir_agent.tools.telemetry.aws_cloudtrail.lookup
+    input_schema:
+      type: object
+      properties:
+        attribute:
+          type: string
+          enum: [EventName, Username, EventSource, ResourceName,
+                 ResourceType, EventId, AccessKeyId, ReadOnly]
+        value:
+          type: string
+        start_time:
+          type: string
+          description: ISO8601 timestamp inclusive lower bound (UTC).
+        end_time:
+          type: string
+          description: ISO8601 timestamp exclusive upper bound (UTC).
+        region:
+          type: string
+      required: [attribute, value]
+
+  - id: aws.guardduty.findings
+    phase: telemetry
+    cloud: aws
+    description: |
+      List GuardDuty findings with severity >= threshold for the in-scope
+      detectors. Returns finding IDs, types, severities, affected resources,
+      and source IPs. Use to anchor the 24-hour breach hunt.
+    handler: ir_agent.tools.telemetry.aws_guardduty.findings
+    input_schema:
+      type: object
+      properties:
+        min_severity:
+          type: number
+          default: 4.0
+        start_time:
+          type: string
+        end_time:
+          type: string
+      required: []
+
+  - id: aws.vpcflow.query
+    phase: telemetry
+    cloud: aws
+    description: |
+      Query VPC Flow Logs via CloudWatch Logs Insights. Filter by srcAddr /
+      dstAddr / dstPort. Returns flows with bytes-out, action, and flag.
+      Second source for any claim about network-side movement.
+    handler: ir_agent.tools.telemetry.aws_vpcflow.query
+    input_schema:
+      type: object
+      properties:
+        log_group:
+          type: string
+        src_addr:
+          type: string
+        dst_addr:
+          type: string
+        dst_port:
+          type: integer
+        start_time:
+          type: string
+        end_time:
+          type: string
+      required: [log_group]
+
+  - id: aws.config.history
+    phase: telemetry
+    cloud: aws
+    description: |
+      Pull AWS Config resource-configuration history for a given resource
+      (role, user, bucket, security group). Returns ordered configuration
+      snapshots. Use to answer "was this policy always this permissive?"
+    handler: ir_agent.tools.telemetry.aws_config.history
+    input_schema:
+      type: object
+      properties:
+        resource_type:
+          type: string
+          description: 'e.g. AWS::IAM::Role, AWS::S3::Bucket'
+        resource_id:
+          type: string
+        lookback_hours:
+          type: integer
+          default: 168
+      required: [resource_type, resource_id]
+
+  - id: aws.iam.get_principal
+    phase: telemetry
+    cloud: aws
+    description: |
+      Resolve an IAM principal (user or role) and return its attached +
+      inline policies, trust relationship (for roles), and access-key
+      metadata. Use after CloudTrail surfaces a suspicious AccessKeyId.
+    handler: ir_agent.tools.telemetry.aws_iam.get_principal
+    input_schema:
+      type: object
+      properties:
+        access_key_id:
+          type: string
+        principal_arn:
+          type: string
+      oneOf:
+        - { required: [access_key_id] }
+        - { required: [principal_arn] }
+
+  # ─── TELEMETRY · AZURE ─────────────────────────────────────────
+
+  - id: azure.sentinel.kql
+    phase: telemetry
+    cloud: azure
+    description: |
+      Run a KQL query against the Microsoft Sentinel / Log Analytics
+      workspace declared in the tenant profile.
+    handler: ir_agent.tools.telemetry.azure_sentinel.kql
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+          description: KQL query string.
+        timespan_hours:
+          type: integer
+          default: 24
+      required: [query]
+
+  - id: azure.entra.signin_logs
+    phase: telemetry
+    cloud: azure
+    description: |
+      Query Entra ID sign-in logs across ALL FOUR tables (Interactive,
+      Non-Interactive, Service Principal, Managed Identity). Filter by
+      userPrincipalName, appId, ipAddress, or correlationId.
+    handler: ir_agent.tools.telemetry.azure_entra.signin_logs
+    input_schema:
+      type: object
+      properties:
+        upn:           { type: string }
+        app_id:        { type: string }
+        ip_address:    { type: string }
+        correlation_id: { type: string }
+        kinds:
+          type: array
+          items:
+            type: string
+            enum: [interactive, non_interactive, service_principal, managed_identity]
+          default: [interactive, non_interactive, service_principal, managed_identity]
+        timespan_hours: { type: integer, default: 24 }
+      required: []
+
+  - id: azure.entra.audit_logs
+    phase: telemetry
+    cloud: azure
+    description: |
+      Query Entra ID AuditLogs — the directory-change log. The persistence
+      log: 'Update application', 'Add service principal', 'Add federated
+      identity credential', 'Add member to role', etc.
+    handler: ir_agent.tools.telemetry.azure_entra.audit_logs
+    input_schema:
+      type: object
+      properties:
+        operations:    { type: array, items: { type: string } }
+        actor_upn:     { type: string }
+        target_app_id: { type: string }
+        timespan_hours: { type: integer, default: 24 }
+      required: []
+
+  - id: azure.activity.query
+    phase: telemetry
+    cloud: azure
+    description: |
+      Query Azure Activity log (subscription control plane). Filter by
+      operationName, caller, resourceId. Use for `roleAssignments/write`,
+      `diagnosticSettings/delete`, `runCommand/action` detections.
+    handler: ir_agent.tools.telemetry.azure_activity.query
+    input_schema:
+      type: object
+      properties:
+        subscription_id: { type: string }
+        operation_name: { type: string }
+        caller:         { type: string }
+        resource_id:    { type: string }
+        timespan_hours: { type: integer, default: 24 }
+      required: []
+
+  - id: azure.graph.activity_logs
+    phase: telemetry
+    cloud: azure
+    description: |
+      Query Microsoft Graph Activity Logs. Filter by appId, requestUri,
+      ipAddress. Reveals mass-read of /users, /mailFolders, /messages —
+      the typical post-AiTM enumeration pattern.
+    handler: ir_agent.tools.telemetry.azure_graph.activity_logs
+    input_schema:
+      type: object
+      properties:
+        app_id:               { type: string }
+        request_uri_contains: { type: string }
+        ip_address:           { type: string }
+        timespan_hours:       { type: integer, default: 24 }
+      required: []
+
+  # ─── ACTION · STAGED CONTAINMENT — AWS ──────────────────────────
+
+  - id: aws.iam.stage_disable_key
+    phase: action
+    cloud: aws
+    destructive: true
+    description: |
+      STAGE an IAM access key deactivation. Returns the boto3 command and
+      blast radius. Does NOT execute. Use for compromised access keys.
+    handler: ir_agent.tools.action.aws_stage.disable_access_key
+    input_schema:
+      type: object
+      properties:
+        access_key_id: { type: string }
+        username:      { type: string }
+        rationale:     { type: string }
+      required: [access_key_id, rationale]
+
+  - id: aws.network.stage_waf_block
+    phase: action
+    cloud: aws
+    destructive: true
+    description: |
+      STAGE adding an IP or CIDR to an AWS WAFv2 IP set (block list).
+      Returns the staged command. Use after AbuseIPDB + Shodan confirm a
+      hostile source IP.
+    handler: ir_agent.tools.action.aws_stage.waf_block
+    input_schema:
+      type: object
+      properties:
+        ip_set_arn: { type: string }
+        cidr:       { type: string }
+        rationale:  { type: string }
+      required: [ip_set_arn, cidr, rationale]
+
+  - id: aws.ec2.stage_isolate_instance
+    phase: action
+    cloud: aws
+    destructive: true
+    description: |
+      STAGE swapping an EC2 instance's security groups to the quarantine
+      SG (deny all). Returns the staged ModifyInstanceAttribute call.
+    handler: ir_agent.tools.action.aws_stage.isolate_instance
+    input_schema:
+      type: object
+      properties:
+        instance_id:      { type: string }
+        quarantine_sg_id: { type: string }
+        rationale:        { type: string }
+      required: [instance_id, quarantine_sg_id, rationale]
+
+  - id: aws.ec2.stage_revoke_snapshot_share
+    phase: action
+    cloud: aws
+    destructive: true
+    description: |
+      STAGE removing external-account permission from an EBS snapshot.
+      Returns the staged ResetSnapshotAttribute call.
+    handler: ir_agent.tools.action.aws_stage.revoke_snapshot_share
+    input_schema:
+      type: object
+      properties:
+        snapshot_id:         { type: string }
+        external_account_id: { type: string }
+        rationale:           { type: string }
+      required: [snapshot_id, external_account_id, rationale]
+
+  - id: aws.iam.stage_rescope_role
+    phase: action
+    cloud: aws
+    destructive: true
+    description: |
+      STAGE detaching a wildcard policy and attaching a least-privilege
+      replacement. Returns the staged Detach/Attach commands.
+    handler: ir_agent.tools.action.aws_stage.rescope_role
+    input_schema:
+      type: object
+      properties:
+        role_name:              { type: string }
+        policy_arn_to_detach:   { type: string }
+        replacement_policy_arn: { type: string }
+        rationale:              { type: string }
+      required: [role_name, policy_arn_to_detach, rationale]
+
+  # ─── ACTION · STAGED CONTAINMENT — AZURE ────────────────────────
+
+  - id: azure.user.stage_revoke_sessions
+    phase: action
+    cloud: azure
+    destructive: true
+    description: |
+      STAGE `revokeSignInSessions` for an Entra user. Use immediately on
+      suspected AiTM victims.
+    handler: ir_agent.tools.action.azure_stage.revoke_sessions
+    input_schema:
+      type: object
+      properties:
+        user_object_id: { type: string }
+        rationale:      { type: string }
+      required: [user_object_id, rationale]
+
+  - id: azure.app.stage_remove_credential
+    phase: action
+    cloud: azure
+    destructive: true
+    description: |
+      STAGE removing a specific password / key / federated credential from
+      a service principal or app registration.
+    handler: ir_agent.tools.action.azure_stage.remove_credential
+    input_schema:
+      type: object
+      properties:
+        app_object_id:   { type: string }
+        credential_id:   { type: string }
+        credential_type: { type: string, enum: [password, key, federated] }
+        rationale:       { type: string }
+      required: [app_object_id, credential_id, credential_type, rationale]
+
+  - id: azure.app.stage_disable_spn
+    phase: action
+    cloud: azure
+    destructive: true
+    description: |
+      STAGE disabling a service principal (set accountEnabled=false).
+    handler: ir_agent.tools.action.azure_stage.disable_spn
+    input_schema:
+      type: object
+      properties:
+        spn_object_id: { type: string }
+        rationale:     { type: string }
+      required: [spn_object_id, rationale]
+
+  - id: azure.ca.stage_emergency_block
+    phase: action
+    cloud: azure
+    destructive: true
+    description: |
+      STAGE a Conditional Access emergency-block policy for a specific user.
+    handler: ir_agent.tools.action.azure_stage.ca_emergency_block
+    input_schema:
+      type: object
+      properties:
+        user_object_id: { type: string }
+        rationale:      { type: string }
+      required: [user_object_id, rationale]
+
+  - id: azure.storage.stage_revoke_sas
+    phase: action
+    cloud: azure
+    destructive: true
+    description: |
+      STAGE regenerating a storage account key, which invalidates every SAS
+      signed with it.
+    handler: ir_agent.tools.action.azure_stage.revoke_sas
+    input_schema:
+      type: object
+      properties:
+        storage_account_id: { type: string }
+        key_name:           { type: string, enum: [key1, key2] }
+        rationale:          { type: string }
+      required: [storage_account_id, key_name, rationale]
+
+  # ─── TELEMETRY · WINDOWS HOST ──────────────────────────────────
+
+  - id: windows.eventlog.query
+    phase: telemetry
+    cloud: windows
+    description: |
+      Query the Windows event log (Security / TaskScheduler / WinRM /
+      PowerShell channels). Filter by channel, event ID, computer, or
+      target user. Sample mode reads the pre-collected dataset; live mode
+      requires explicit EDR remote-shell authorization.
+    handler: ir_agent.tools.telemetry.windows_eventlog.query
+    input_schema:
+      type: object
+      properties:
+        channel:        { type: string }
+        event_id:       { type: integer }
+        computer:       { type: string }
+        target_user:    { type: string }
+        timespan_hours: { type: integer, default: 24 }
+      required: []
+
+  - id: windows.sysmon.query
+    phase: telemetry
+    cloud: windows
+    description: |
+      Query Sysmon events (1 ProcessCreate / 3 NetworkConnect / 7 ImageLoad
+      / 10 ProcessAccess / 11 FileCreate / 13 RegistryValueSet / 22
+      DNSQuery). Filter by event ID, computer, image, parent image, or
+      command-line substring. Sample mode only — live mode requires EDR
+      remote-shell authorization.
+    handler: ir_agent.tools.telemetry.windows_sysmon.query
+    input_schema:
+      type: object
+      properties:
+        event_id:              { type: integer }
+        computer:              { type: string }
+        image_contains:        { type: string }
+        target_image_contains: { type: string }
+        parent_image_contains: { type: string }
+        command_line_contains: { type: string }
+        timespan_hours:        { type: integer, default: 24 }
+      required: []
+
+  - id: windows.scheduled_tasks.list
+    phase: telemetry
+    cloud: windows
+    description: |
+      Enumerate scheduled tasks on a Windows host. Filter by author or
+      action substring. Use after TaskScheduler event 4698 / 106 surfaces
+      a persistence candidate.
+    handler: ir_agent.tools.telemetry.windows_scheduled_tasks.list_tasks
+    input_schema:
+      type: object
+      properties:
+        computer:        { type: string }
+        author_contains: { type: string }
+        action_contains: { type: string }
+      required: []
+
+  - id: windows.processes.snapshot
+    phase: telemetry
+    cloud: windows
+    description: |
+      Current process tree snapshot on a Windows host. Filter by computer
+      or process name substring.
+    handler: ir_agent.tools.telemetry.windows_processes.snapshot
+    input_schema:
+      type: object
+      properties:
+        computer:      { type: string }
+        name_contains: { type: string }
+      required: []
+
+  # ─── ACTION · STAGED CONTAINMENT — WINDOWS ──────────────────────
+
+  - id: windows.host.stage_isolate
+    phase: action
+    cloud: windows
+    destructive: true
+    description: |
+      STAGE EDR network-isolation of a Windows host. Memory and disk stay
+      intact for forensics; only network egress is severed.
+    handler: ir_agent.tools.action.windows_stage.isolate_host
+    input_schema:
+      type: object
+      properties:
+        computer:  { type: string }
+        rationale: { type: string }
+      required: [computer, rationale]
+
+  - id: windows.process.stage_kill
+    phase: action
+    cloud: windows
+    destructive: true
+    description: |
+      STAGE termination of a specific process tree by PID + ProcessGuid.
+      Stage only — pair with stop-disable-service or remove-scheduled-task
+      to prevent re-spawn.
+    handler: ir_agent.tools.action.windows_stage.kill_process
+    input_schema:
+      type: object
+      properties:
+        computer:     { type: string }
+        process_guid: { type: string }
+        pid:          { type: ["integer","string"] }
+        rationale:    { type: string }
+      required: [computer, process_guid, pid, rationale]
+
+  - id: windows.account.stage_disable
+    phase: action
+    cloud: windows
+    destructive: true
+    description: |
+      STAGE Active Directory account disable + password reset + per-user
+      TGT invalidation. For Domain Admin accounts this MUST go through
+      tier-0 change control — the runbook flags it.
+    handler: ir_agent.tools.action.windows_stage.disable_account
+    input_schema:
+      type: object
+      properties:
+        sam_account_name: { type: string }
+        domain:           { type: string }
+        rationale:        { type: string }
+      required: [sam_account_name, domain, rationale]
+
+  - id: windows.task.stage_remove
+    phase: action
+    cloud: windows
+    destructive: true
+    description: |
+      STAGE removal of a scheduled task on a Windows host.
+    handler: ir_agent.tools.action.windows_stage.remove_scheduled_task
+    input_schema:
+      type: object
+      properties:
+        computer:  { type: string }
+        task_name: { type: string }
+        rationale: { type: string }
+      required: [computer, task_name, rationale]
+
+  - id: windows.service.stage_stop_disable
+    phase: action
+    cloud: windows
+    destructive: true
+    description: |
+      STAGE stop + disable of a Windows service (use for attacker-installed
+      services like PSEXESVC, beacon implants).
+    handler: ir_agent.tools.action.windows_stage.stop_disable_service
+    input_schema:
+      type: object
+      properties:
+        computer:     { type: string }
+        service_name: { type: string }
+        rationale:    { type: string }
+      required: [computer, service_name, rationale]

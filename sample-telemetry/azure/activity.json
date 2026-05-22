@@ -1,0 +1,12 @@
+[
+  {
+    "eventTimestamp": "2026-05-19T12:30:00Z",
+    "operationName": "Microsoft.Storage/storageAccounts/listAccountSas/action",
+    "caller": "spn-acme-reporting-connector",
+    "callerIpAddress": "203.0.113.55",
+    "resourceId": "/subscriptions/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/resourceGroups/rg-prod/providers/Microsoft.Storage/storageAccounts/acmecustomerspii",
+    "subscriptionId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "status": "Succeeded",
+    "correlationId": "ddddddd2-2222-3333-4444-555555555555"
+  }
+]
